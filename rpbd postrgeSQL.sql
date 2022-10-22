@@ -1,23 +1,27 @@
-1. SELECT 'amogus'
+1. 
+DO $$
+BEGIN
+	RAISE NOTICE 'amogus';
+END;
+$$;
 
-2. SELECT CURRENT_DATE
+2. 
+DO $$
+BEGIN
+	RAISE NOTICE '%', CURRENT_DATE;
+END;
+$$;
 
 3.
-WITH mynums (var1, var2) as (
-	values(5, 3)
-)
-SELECT var1 + var2, var1 * var2, var1 / var2, var1 - var2
-FROM mynums
-
-CREATE OR REPLACE FUNCTION calculate(var1 int, var2 int) RETURNS int
-AS $$
-DECLARE result int;
+DO $$
+DECLARE num1 int := 2; num2 int := 1;
 BEGIN
-	RETURN var1 + var2;
-END
-$$ LANGUAGE plpgsql;
-
-SELECT calculate(2, 4);
+	RAISE NOTICE '%', num1+num2;
+	RAISE NOTICE '%', num1-num2;
+	RAISE NOTICE '%', num1*num2;
+	RAISE NOTICE '%', num1/num2;
+END;
+$$;
 
 4.
 DO $BODY$
@@ -175,16 +179,32 @@ CREATE TABLE IF NOT EXISTS relations (
 COMMIT;
 
 13.
-CREATE OR REPLACE PROCEDURE add_relations(id01 int, id02 int, rel_type varchar)
+CREATE OR REPLACE PROCEDURE addPersonWhithRelations(
+	name1 text, surname text, birth_date DATE, growth real, weight real, eyes text, hair text, rels int[], rel_types text[])
 LANGUAGE plpgsql
 AS $$
+DECLARE person_id int;
 BEGIN
-	INSERT INTO relations (id1, id2, relation_type)
-	VALUES(id01, id02, rel_type);
+	INSERT INTO people (name, surname, birth_date, growth, weight, eyes, hair, relevance_date)
+	VALUES (name1, surname, birth_date, growth, weight, eyes, hair, CURRENT_DATE);
+	
+	SELECT id INTO person_id FROM 
+		(SELECT MAX(relevance_date) as DATE1
+		FROM people
+		LIMIT 1) t,
+		people
+	WHERE relevance_date = t.DATE1;
+
+	FOR i IN 1..array_length(rels, 1) LOOP
+		INSERT INTO relations (id1, id2, relation_type)
+		VALUES(person_id, rels[i], rel_types[i]);
+	END LOOP;
 END;
 $$;
 
-CALL add_relations(4, 5, 'sisters')
+CALL addPersonWhithRelations('Oleg', 'Orlov', DATE '2006-02-01', 168.5, 72.4, 'blue', 'blond', 
+							 array[3,4,5], array['brothers','brother sister','brother sister']);
+
 
 14.
 BEGIN; 
@@ -202,4 +222,95 @@ BEGIN
 END;
 $$;
 
-CALL update_body(1, 180.3, 81.7);
+CALL update_body(1, 180.3, 81.7)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+13.
+CREATE OR REPLACE PROCEDURE add_relations(ids1 int[], ids2 int[], rel_types text[])
+LANGUAGE plpgsql
+AS $$
+BEGIN
+	FOR i IN 1..array_length(ids1, 1) LOOP
+		INSERT INTO relations (id1, id2, relation_type)
+		VALUES(ids1[i], ids2[i], rel_types[i]);
+	END LOOP;
+END;
+$$;
+
+CALL add_relations(array[4, 3, 3],array[5, 4, 5],array['sisters', 'brother sister', 'brother sister']);
+
+
+WITH mynums (var1, var2) as (
+	values(5, 3)
+)
+
+SELECT *
+FROM people
+
+CREATE OR REPLACE FUNCTION get_user_id_by_surname(surname varchar) RETURNS int
+AS $$
+DECLARE
+	user_id int;
+BEGIN
+	SELECT people.id INTO STRICT user_id
+	FROM people
+	WHERE people.surname = get_user_id_by_surname.surname;
+	RETURN user_id;
+	
+	EXCEPTION
+		WHEN NO_DATA_FOUND THEN
+			RAISE EXCEPTION 'people % not found', surname;
+		WHEN TOO_MANY_ROWS THEN
+			RAISE EXCEPTION 'people % not unique', surname;
+END
+$$ LANGUAGE plpgsql;
+
+SELECT get_user_id_by_surname('orlova')
+
+CREATE OR REPLACE FUNCTION get_people_info(id int) RETURNS varchar
+AS $$
+DECLARE
+	t_people people%ROWTYPE; 
+BEGIN
+	SELECT * INTO t_people
+	FROM people
+	WHERE people.id = get_people_info.id;
+	RETURN t_people.name || ' ' || t_people.surname;
+END
+$$ LANGUAGE plpgsql;
+
+SELECT get_people_info(2)
+
+
+CREATE OR REPLACE FUNCTION get_people_query_info(id int) RETURNS SETOF people
+AS $BODY$
+DECLARE
+	t_people people%ROWTYPE; 
+BEGIN
+	RETURN QUERY
+		SELECT *
+		FROM people
+		WHERE people.id = get_people_query_info.id;
+END
+$BODY$ LANGUAGE plpgsql;
+
+SELECT get_people_query_info(1)
+SELECT * FROM get_people_query_info(1)
