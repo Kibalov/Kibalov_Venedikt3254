@@ -180,20 +180,17 @@ COMMIT;
 
 13.
 CREATE OR REPLACE PROCEDURE addPersonWhithRelations(
-	name1 text, surname text, birth_date DATE, growth real, weight real, eyes text, hair text, rels int[], rel_types text[])
+	name1 text, surname1 text, birth_date1 DATE, growth1 real, weight1 real, eyes1 text, hair1 text, rels int[], rel_types text[])
 LANGUAGE plpgsql
 AS $$
 DECLARE person_id int;
 BEGIN
 	INSERT INTO people (name, surname, birth_date, growth, weight, eyes, hair, relevance_date)
-	VALUES (name1, surname, birth_date, growth, weight, eyes, hair, CURRENT_DATE);
+	VALUES (name1, surname1, birth_date1, growth1, weight1, eyes1, hair1, CURRENT_DATE);
 	
-	SELECT id INTO person_id FROM 
-		(SELECT MAX(relevance_date) as DATE1
-		FROM people
-		LIMIT 1) t,
-		people
-	WHERE relevance_date = t.DATE1;
+	SELECT id INTO person_id 
+	FROM people
+	WHERE name = name1 and surname = surname1 and birth_date = birth_date1 and growth = growth1 and weight = weight1 and eyes = eyes1 and hair = hair1;
 
 	FOR i IN 1..array_length(rels, 1) LOOP
 		INSERT INTO relations (id1, id2, relation_type)
