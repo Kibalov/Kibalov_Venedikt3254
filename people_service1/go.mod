@@ -1,4 +1,4 @@
-module github.com/Kibalov/Kibalov_Venedikt3254/people_service
+module github.com/Kibalov/Kibalov_Venedikt3254/people_service1
 
 go 1.19
 

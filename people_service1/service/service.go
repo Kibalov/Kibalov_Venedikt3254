@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 
-	"github.com/Kibalov/Kibalov_Venedikt3254/people/service/store"
+	"github.com/Kibalov/Kibalov_Venedikt3254/people_service1/service/store"
 )
 
 type storer interface {
